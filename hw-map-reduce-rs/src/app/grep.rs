@@ -68,6 +68,8 @@ pub fn reduce(
 ) -> Result<Bytes> {
     let mut writer = LengthDelimitedWriter::new();
 
+    let mut values = values.collect::<Vec<Bytes>>();
+    values.sort_by_key(|value| value.clone().get_u64());
     for value in values {
         writer.send(value);
     }
