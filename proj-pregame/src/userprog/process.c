@@ -357,6 +357,7 @@ bool load(const char* file_name, void (**eip)(void), void** esp) {
   success = true;
 
 done:
+  *esp = *esp - 20;
   /* We arrive here whether the load is successful or not. */
   file_close(file);
   return success;
