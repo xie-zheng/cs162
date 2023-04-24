@@ -561,8 +561,9 @@ cpu: ips=1000000
 megs: $mem
 log: bochsout.txt
 panic: action=fatal
-user_shortcut: keys=ctrlaltdel
+keyboard: user_shortcut=ctrl-alt-del
 EOF
+#user_shortcut: keys=ctrlaltdel
     print BOCHSRC "gdbstub: enabled=1\n" if $debug eq 'gdb';
     print BOCHSRC "clock: sync=", $realtime ? 'realtime' : 'none',
       ", time0=0\n";
