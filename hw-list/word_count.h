@@ -51,6 +51,10 @@ typedef struct word_count_list {
   struct list lst;
   pthread_mutex_t lock;
 } word_count_list_t;
+/*
+ * Insert word_count_list to dest
+ */
+void add_word_counts(word_count_list_t* dest, word_count_list_t* src);
 #else  /* PTHREADS */
 typedef struct list word_count_list_t;
 #endif /* PTHREADS */
@@ -80,6 +84,7 @@ word_count_t* find_word(word_count_list_t* wclist, char* word);
  * present. Takes ownership of word.
  */
 word_count_t* add_word(word_count_list_t* wclist, char* word);
+
 
 /* Print word counts to a file. */
 void fprint_words(word_count_list_t* wclist, FILE* outfile);
