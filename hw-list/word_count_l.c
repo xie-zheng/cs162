@@ -26,29 +26,66 @@
 
 #include "word_count.h"
 
-void init_words(word_count_list_t* wclist) { /* TODO */
+void init_words(word_count_list_t* wclist) {
+  list_init(wclist);
 }
 
 size_t len_words(word_count_list_t* wclist) {
-  /* TODO */
-  return 0;
+  return list_size(wclist);
 }
 
 word_count_t* find_word(word_count_list_t* wclist, char* word) {
-  /* TODO */
+  word_count_t* wc = NULL;
+  struct list_elem* e;
+  // TODO 优化线性查找
+  for (e = list_begin(wclist); e != list_end(wclist); e = list_next(e)) {
+    wc = list_entry(e, word_count_t, elem);
+    int cmp = strcmp(word, wc->word);
+    if (cmp == 0) {
+      return wc;
+    }
+  }
   return NULL;
 }
 
 word_count_t* add_word(word_count_list_t* wclist, char* word) {
-  /* TODO */
-  return NULL;
+  word_count_t* wc = find_word(wclist, word);
+
+  /* already present */
+  if (wc != NULL) {
+    wc->count += 1;
+    return wc;
+  }
+
+  /* not present yet */
+  wc = malloc(sizeof(word_count_t));
+  if (wc == NULL) {
+    fprintf(stderr, "malloc space for new word-count fail");
+  }
+  char* wordcopy = malloc(strlen(word));
+  strcpy(wordcopy, word);
+  wc->word = wordcopy;
+  wc->count = 1;
+  wc->elem.prev = NULL;
+  wc->elem.next = NULL;
+  list_push_front(wclist, &wc->elem);
+  return wc;
 }
 
-void fprint_words(word_count_list_t* wclist, FILE* outfile) { /* TODO */
+void fprint_words(word_count_list_t* wclist, FILE* outfile) {
+  struct list_elem* e;
+  for (e = list_begin(wclist); e != list_end(wclist); e = list_next(e)) {
+    word_count_t* wc = list_entry(e, word_count_t, elem);
+    fprintf(outfile, "%s %d\n", wc->word, wc->count);
+  }
 }
 
 static bool less_list(const struct list_elem* ewc1, const struct list_elem* ewc2, void* aux) {
-  /* TODO */
+  word_count_t* wc1 = list_entry(ewc1, word_count_t, elem);
+  word_count_t* wc2 = list_entry(ewc2, word_count_t, elem);
+  int cmp = strcmp(wc1->word, wc2->word);
+  if (cmp < 0)
+    return true;
   return false;
 }
 

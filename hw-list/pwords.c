@@ -32,6 +32,27 @@
 #include "word_count.h"
 #include "word_helpers.h"
 
+struct threadinfo {
+  word_count_list_t* wclist;
+  char* filename;
+};
+
+void* threadfun(void* args) {
+  struct threadinfo* info = (struct threadinfo*) args;
+  FILE* f = fopen(info->filename, "r");
+  if (f == NULL) {
+    printf("ERROR: fail open file %s\n", info->filename);
+    pthread_exit(NULL);
+  }
+  word_count_list_t thread_counts;
+  init_words(&thread_counts);
+  count_words(&thread_counts, f);
+  
+  fclose(f);
+  add_word_counts(info->wclist, &thread_counts);
+  pthread_exit(NULL);
+}
+
 /*
  * main - handle command line, spawning one thread per file.
  */
@@ -44,11 +65,34 @@ int main(int argc, char* argv[]) {
     /* Process stdin in a single thread. */
     count_words(&word_counts, stdin);
   } else {
-    /* TODO */
+    int rc;
+    int nthreads = argc - 1;
+    pthread_t threads[nthreads];
+    struct threadinfo* info = malloc(sizeof(struct threadinfo));
+    for (int t = 1; t < argc; t++) {
+      char* fn = malloc(strlen(argv[t]));
+      strcpy(fn, argv[t]);
+      printf("[thread %d], filename=%s\n", t, fn);
+      info->filename = fn;
+      info->wclist = &word_counts;
+      rc = pthread_create(&threads[t-1], NULL, threadfun, (void*)info);
+      if (rc) {
+        printf("ERROR, return code from pthread_create() is %d\n", rc);
+      }
+    }
+
+    pthread_mutex_t lock;
+    pthread_mutex_init(&lock, NULL);
+    void* done;
+    for (int i = 0; i < nthreads; i++) {
+      pthread_mutex_lock(&lock);
+      pthread_join(threads[i], &done);
+      pthread_mutex_unlock(&lock);
+    }
   }
 
   /* Output final result of all threads' work. */
   wordcount_sort(&word_counts, less_count);
   fprint_words(&word_counts, stdout);
-  return 0;
+  pthread_exit(NULL);
 }
