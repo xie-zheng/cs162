@@ -88,6 +88,29 @@ int lookup(char cmd[]) {
   return -1;
 }
 
+int run_program(struct tokens* tokens) {
+	/* get program name & argvs */
+	char *path = tokens_get_token(tokens, 0);
+	int argc = tokens_get_length(tokens);
+	if (access(path, F_OK) == 0) {
+		// file exists
+		// ----- note
+		// char* argv[argc]时 程序无法正确执行 为什么?
+		// ----- 
+		char **argv = (char**)(malloc(sizeof(char*) * argc));
+		for (int i = 0; i < argc; i++) {
+			argv[i] = tokens_get_token(tokens, i);
+			// printf("token[%d]=%s\n", i, argv[i]);
+		}
+		int res = execv(path, argv);
+		return res;
+	} else {
+    	// file doesn't exist
+		fprintf(stderr, "no such program %s\n", path);
+		return 0;
+	}	
+}
+
 /* Intialization procedures for this shell */
 void init_shell() {
   /* Our shell is connected to standard input. */
@@ -134,8 +157,23 @@ int main(unused int argc, unused char* argv[]) {
     if (fundex >= 0) {
       cmd_table[fundex].fun(tokens);
     } else {
+      int status;
       /* REPLACE this to run commands as programs. */
-      fprintf(stdout, "This shell doesn't know how to run programs.\n");
+      // fprintf(stdout, "This shell doesn't know how to run programs.\n");
+	  int pid = fork();
+	  if (pid < 0) {
+	    fprintf(stderr, "fork child fail");
+	  } else if (pid == 0) {
+	      run_program(tokens);
+		  tokens_destroy(tokens);
+		  // shell_is_interactive = false;
+		  exit(0);
+	  } else {
+	      wait(&status);
+		  if (status != 0) {
+		    fprintf(stderr, "%d", status);
+		  }
+	  }
     }
 
     if (shell_is_interactive)
