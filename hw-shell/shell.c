@@ -91,7 +91,7 @@ int lookup(char cmd[]) {
 int run_program(struct tokens* tokens) {
 	/* get program name & argvs */
 	char* env_path = getenv("PATH");
-	printf("%s", env_path);
+	// printf("%s", env_path);
 
 	char *path = tokens_get_token(tokens, 0);
 	int argc = tokens_get_length(tokens);
@@ -103,7 +103,19 @@ int run_program(struct tokens* tokens) {
 		argv[i] = tokens_get_token(tokens, i);
 	}
 	// printf("token[%d]=%s\n", i, argv[i]);
-	
+	if (argc > 1) {
+    	if (strcmp(argv[1], ">") == 0) {
+	        int fd = open(argv[2], O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+			dup2(fd, 1);
+			close(fd);
+			argv[1] = NULL;
+		} else if (strcmp(argv[1], "<") == 0) {
+	        int fd = open(argv[2], O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+			dup2(fd, 0);
+			close(fd);
+			argv[1] = NULL;
+		}
+	}
 	if (access(path, F_OK) == 0) {
 		// file exists
 		int res = execv(path, argv);
