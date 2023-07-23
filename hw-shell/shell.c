@@ -90,21 +90,39 @@ int lookup(char cmd[]) {
 
 int run_program(struct tokens* tokens) {
 	/* get program name & argvs */
+	char* env_path = getenv("PATH");
+	printf("%s", env_path);
+
 	char *path = tokens_get_token(tokens, 0);
 	int argc = tokens_get_length(tokens);
+	// ----- note
+	// char* argv[argc]时 程序无法正确执行 为什么?
+	// ----- 
+	char **argv = (char**)(malloc(sizeof(char*) * argc));
+	for (int i = 0; i < argc; i++) {
+		argv[i] = tokens_get_token(tokens, i);
+	}
+	// printf("token[%d]=%s\n", i, argv[i]);
+	
 	if (access(path, F_OK) == 0) {
 		// file exists
-		// ----- note
-		// char* argv[argc]时 程序无法正确执行 为什么?
-		// ----- 
-		char **argv = (char**)(malloc(sizeof(char*) * argc));
-		for (int i = 0; i < argc; i++) {
-			argv[i] = tokens_get_token(tokens, i);
-			// printf("token[%d]=%s\n", i, argv[i]);
-		}
 		int res = execv(path, argv);
 		return res;
 	} else {
+		char* dir = strsep(&env_path, ":");
+		while (dir != NULL) {
+		    // concat program name and dir prefix
+			char* new_path = (char*) malloc(strlen(dir) + strlen(path) + 2);
+			strcpy(new_path, dir);
+			strcat(new_path, "/");
+			strcat(new_path, path);
+
+			if (access(new_path, F_OK) == 0) {
+			    int res = execv(new_path, argv);
+				return res;
+			}
+			dir = strsep(&env_path, ":");
+		}
     	// file doesn't exist
 		fprintf(stderr, "no such program %s\n", path);
 		return 0;
@@ -158,7 +176,6 @@ int main(unused int argc, unused char* argv[]) {
       cmd_table[fundex].fun(tokens);
     } else {
       int status;
-      /* REPLACE this to run commands as programs. */
       // fprintf(stdout, "This shell doesn't know how to run programs.\n");
 	  int pid = fork();
 	  if (pid < 0) {
