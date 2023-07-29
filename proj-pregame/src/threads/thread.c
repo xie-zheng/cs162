@@ -111,6 +111,7 @@ void thread_init(void) {
   list_init(&all_list);
 
   /* Set up a thread structure for the running thread. */
+  /* 是thread_init()运行的这个线程吗? */
   initial_thread = running_thread();
   init_thread(initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
@@ -426,11 +427,13 @@ static void init_thread(struct thread* t, const char* name, int priority) {
   memset(t, 0, sizeof *t);
   t->status = THREAD_BLOCKED;
   strlcpy(t->name, name, sizeof t->name);
+  /* 这个空间是什么时候分配的? */
   t->stack = (uint8_t*)t + PGSIZE;
   t->priority = priority;
   t->pcb = NULL;
   t->magic = THREAD_MAGIC;
 
+  /* 内核态关闭中断等于是mutex了 */
   old_level = intr_disable();
   list_push_back(&all_list, &t->allelem);
   intr_set_level(old_level);
