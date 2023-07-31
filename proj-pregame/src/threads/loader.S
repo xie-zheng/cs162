@@ -21,10 +21,10 @@
 # Set stack to grow downward from 60 kB (after boot, the kernel
 # continues to use this stack for its initial thread).
 
-	sub %ax, %ax
-	mov %ax, %ds
-	mov %ax, %ss
-	mov $0xf000, %esp
+	sub %ax, %ax            # Set accumulator reg to 0
+	mov %ax, %ds            # Data  Segment -> 0
+	mov %ax, %ss            # Stack Segment -> 0
+	mov $0xf000, %esp       # Stack Pointer -> 0xf0000
 
 # Configure serial port so we can report progress without connected VGA.
 # See [IntrList] for details.
