@@ -34,7 +34,8 @@
    with the page allocator and sticking the allocation size at
    the beginning of the allocated block's arena header. */
 
-/* Descriptor. */
+/* Descriptor.
+ * 每个page里都被化成大小相同的块吗? */
 struct desc {
   size_t block_size;       /* Size of each element in bytes. */
   size_t blocks_per_arena; /* Number of blocks in an arena. */
